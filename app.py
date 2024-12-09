@@ -197,7 +197,7 @@ class SerpApiClient:
         return all_results
 
 def create_serp_interface():
-    st.title("🔍 Google Search Extractor Pro")
+    st.title("🔍 Google Search Extractor")
     
     # Configurazione nella sidebar
     with st.sidebar:
