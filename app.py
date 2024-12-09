@@ -422,7 +422,7 @@ def create_serp_interface():
 if __name__ == "__main__":
     # Configurazione della pagina Streamlit
     st.set_page_config(
-        page_title="Google Search Extractor Pro",
+        page_title="Google Search Extractor",
         page_icon="🔍",
         layout="wide"
     )
