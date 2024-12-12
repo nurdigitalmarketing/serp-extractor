@@ -233,13 +233,13 @@ def create_serp_interface():
         
         with col1:
             base_query = st.text_input(
-                "Ricerca base",
-                help="Inserisci i termini base della ricerca"
+                "Query base",
+                help="Inserisci la query base della ricerca"
             )
             
             exact_phrase = st.text_input(
-                "Frase esatta",
-                help="La frase verrà cercata esattamente come scritta"
+                "Query esatta",
+                help="La frase o parola verrà cercata esattamente come scritta"
             )
             
             domain = st.text_input(
