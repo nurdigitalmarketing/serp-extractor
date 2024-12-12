@@ -40,7 +40,7 @@ def get_search_type_params(search_type):
     return search_types.get(search_type, search_types["web"])
 
 def build_query(base_query, domain=None, directory_include=None, directory_exclude=None, exclude_sites=None, 
-                exact_phrase=None, exclude_words=None, filetype=None, date_after=None, date_before=None):
+                exact_phrase=None, exclude_words=None, filetype=None, exclude_filetype=None, date_after=None, date_before=None):
     """
     Costruisce la query di ricerca completa con supporto per domini, directory e vari filtri
     """
@@ -83,6 +83,10 @@ def build_query(base_query, domain=None, directory_include=None, directory_exclu
     # Aggiungi tipo di file
     if filetype:
         query_parts.append(f'filetype:{filetype}')
+    
+    # Aggiungi tipo di file da escludere
+    if exclude_filetype:
+        query_parts.append(f'-filetype:{exclude_filetype}')
     
     # Aggiungi date
     if date_after:
@@ -270,11 +274,21 @@ def create_serp_interface():
                 format_func=lambda x: SerpApiClient.SEARCH_TYPES[x]
             )
             
-            filetype = st.selectbox(
-                "Tipo di file",
-                options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
-                format_func=lambda x: f".{x}" if x else "Qualsiasi"
-            )
+            filetype_col1, filetype_col2 = st.columns(2)
+            
+            with filetype_col1:
+                filetype = st.selectbox(
+                    "Includi file",
+                    options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
+                    format_func=lambda x: f".{x}" if x else "Qualsiasi"
+                )
+            
+            with filetype_col2:
+                exclude_filetype = st.selectbox(
+                    "Escludi file",
+                    options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
+                    format_func=lambda x: f".{x}" if x else "Nessuno"
+                )
             
             date_after = st.date_input(
                 "Data dopo",
@@ -306,6 +320,7 @@ def create_serp_interface():
             exact_phrase=exact_phrase,
             exclude_words=exclude_words,
             filetype=filetype,
+            exclude_filetype=exclude_filetype,
             date_after=date_after.strftime("%Y-%m-%d") if date_after else None,
             date_before=date_before.strftime("%Y-%m-%d") if date_before else None
         )
