@@ -40,7 +40,7 @@ def get_search_type_params(search_type):
     return search_types.get(search_type, search_types["web"])
 
 def build_query(base_query, domain=None, directory_include=None, directory_exclude=None, exclude_sites=None, 
-                exact_phrase=None, exclude_words=None, filetype=None, exclude_filetype=None, date_after=None, date_before=None):
+                exact_phrase=None, exclude_words=None, filetype=None, exclude_filetypes=None, date_after=None, date_before=None):
     """
     Costruisce la query di ricerca completa con supporto per domini, directory e vari filtri
     """
@@ -84,9 +84,10 @@ def build_query(base_query, domain=None, directory_include=None, directory_exclu
     if filetype:
         query_parts.append(f'filetype:{filetype}')
     
-    # Aggiungi tipo di file da escludere
-    if exclude_filetype:
-        query_parts.append(f'-filetype:{exclude_filetype}')
+    # Aggiungi tipi di file da escludere (multipli)
+    if exclude_filetypes:
+        for exclude_type in exclude_filetypes:
+            query_parts.append(f'-filetype:{exclude_type}')
     
     # Aggiungi date
     if date_after:
@@ -219,8 +220,7 @@ def create_serp_interface():
                 help="Inserisci la tua chiave API di SerpApi"
             )
 
-    # Form principale
-    # Parametri di localizzazione (definiti fuori dal form)
+    # Parametri di localizzazione
     params = {
         "gl": "it",
         "hl": "it"
@@ -244,29 +244,29 @@ def create_serp_interface():
             
             domain = st.text_input(
                 "Dominio da cercare",
-                help="es: mixtron.it"
+                help="es: example.com"
             )
 
             directory_include = st.text_input(
                 "Directory da includere",
-                help="es: /en/ (cerca solo in questa directory)"
+                help="es: /blog/ (cerca solo in questa directory)"
             )
             
             directory_exclude = st.text_input(
                 "Directory da escludere",
-                help="es: /shop/ (esclude questa directory dalla ricerca)"
+                help="es: /en/ (esclude questa directory dalla ricerca)"
             )
             
             exclude_sites = st.text_input(
                 "Domini da escludere (separati da virgola)",
-                help="es: shop.mixtron.it, altrosito.com"
+                help="es: shop.example.com, otherdomain.com"
             )
 
             exclude_words = st.text_input(
                 "Parole da escludere (separate da virgola)",
                 help="es: spam, ads"
             )
-        
+
         with col2:
             search_type = st.selectbox(
                 "Tipo di ricerca",
@@ -274,33 +274,43 @@ def create_serp_interface():
                 format_func=lambda x: SerpApiClient.SEARCH_TYPES[x]
             )
             
-            filetype_col1, filetype_col2 = st.columns(2)
-            
-            with filetype_col1:
-                filetype = st.selectbox(
-                    "Includi file",
-                    options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
-                    format_func=lambda x: f".{x}" if x else "Qualsiasi"
-                )
-            
-            with filetype_col2:
-                exclude_filetype = st.selectbox(
-                    "Escludi file",
-                    options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
-                    format_func=lambda x: f".{x}" if x else "Nessuno"
-                )
-            
-            date_after = st.date_input(
-                "Data dopo",
-                value=None,
-                help="Risultati dopo questa data"
-            )
-            
-            date_before = st.date_input(
-                "Data prima",
-                value=None,
-                help="Risultati prima di questa data"
-            )
+            with st.expander("⚙️ Opzioni avanzate", expanded=False):
+                # File types
+                st.subheader("📁 Filtri file")
+                filetype_col1, filetype_col2 = st.columns(2)
+                
+                with filetype_col1:
+                    filetype = st.selectbox(
+                        "Includi file",
+                        options=["", "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
+                        format_func=lambda x: f".{x}" if x else "Qualsiasi"
+                    )
+                
+                with filetype_col2:
+                    exclude_filetypes = st.multiselect(
+                        "Escludi file",
+                        options=["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
+                        format_func=lambda x: f".{x}",
+                        help="Seleziona uno o più tipi di file da escludere"
+                    )
+                
+                # Date filters
+                st.subheader("📅 Filtri data")
+                date_col1, date_col2 = st.columns(2)
+                
+                with date_col1:
+                    date_after = st.date_input(
+                        "Data dopo",
+                        value=None,
+                        help="Risultati dopo questa data"
+                    )
+                
+                with date_col2:
+                    date_before = st.date_input(
+                        "Data prima",
+                        value=None,
+                        help="Risultati prima di questa data"
+                    )
             
             max_pages = st.number_input(
                 "Numero max pagine",
@@ -320,7 +330,7 @@ def create_serp_interface():
             exact_phrase=exact_phrase,
             exclude_words=exclude_words,
             filetype=filetype,
-            exclude_filetype=exclude_filetype,
+            exclude_filetypes=exclude_filetypes,
             date_after=date_after.strftime("%Y-%m-%d") if date_after else None,
             date_before=date_before.strftime("%Y-%m-%d") if date_before else None
         )
@@ -330,7 +340,6 @@ def create_serp_interface():
             
         submitted = st.form_submit_button("🔍 Avvia ricerca")
 
-        # Gestione risultati
         if submitted:
             if not query:
                 st.warning("⚠️ Inserisci almeno un parametro di ricerca!")
@@ -343,14 +352,11 @@ def create_serp_interface():
             # Inizializza il client
             client = SerpApiClient(api_key)
             
-            # Usa i parametri di localizzazione definiti in precedenza
-            
             # Esegui la ricerca
             try:
                 results = client.get_results(query, search_type, max_pages, params)
                 
                 if results:
-                    # Salva in session state
                     st.session_state['search_results'] = results
                     st.session_state['search_type'] = search_type
                     st.session_state['export_fields'] = get_search_type_params(search_type)["export_fields"]
@@ -398,6 +404,7 @@ def create_serp_interface():
                 }
                 
                 json_str = json.dumps(json_data, indent=2, ensure_ascii=False)
+                
                 st.download_button(
                     label="📥 Scarica JSON",
                     data=json_str.encode('utf-8'),
