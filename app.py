@@ -276,7 +276,7 @@ def create_serp_interface():
             
             with st.expander("⚙️ Opzioni avanzate", expanded=False):
                 # File types
-                st.markdown("#### Filtri file")
+                st.markdown("##### Filtri file")
                 filetype_col1, filetype_col2 = st.columns(2)
                 
                 with filetype_col1:
@@ -295,7 +295,7 @@ def create_serp_interface():
                     )
                 
                 # Date filters
-                st.markdown("#### Filtri data")
+                st.markdown("##### Filtri data")
                 date_col1, date_col2 = st.columns(2)
                 
                 with date_col1:
