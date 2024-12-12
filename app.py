@@ -60,17 +60,11 @@ def build_query(base_query, domain=None, directory_include=None, directory_exclu
     
     # Aggiungi directory da includere
     if directory_include:
-        # Rimuovi slash iniziali/finali e spazi
-        directory_include = directory_include.strip('/ ')
-        if directory_include:
-            query_parts.append(f'inurl:"{directory_include}"')
+        query_parts.append(f'inurl:{directory_include}')
     
     # Aggiungi directory da escludere
     if directory_exclude:
-        # Rimuovi slash iniziali/finali e spazi
-        directory_exclude = directory_exclude.strip('/ ')
-        if directory_exclude:
-            query_parts.append(f'-inurl:"{directory_exclude}"')
+        query_parts.append(f'-inurl:{directory_exclude}')
     
     # Aggiungi siti/sottodomini da escludere
     if exclude_sites:
